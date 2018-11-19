@@ -1,0 +1,156 @@
+
+###################################################################
+library(vegan)
+
+#Creating the soil dbrda Analysis
+soil_data<-(soil_env_data)
+s_dm <-read.table("/Users/kimberlymighell/Dropbox/JCALL_Nov16/soil_unw_unifrac_dm.txt")
+rownames(s_dm)=colnames(s_dm)
+s_dmob<-as.dist(s_dm,diag=T)
+s_dmob
+
+#full model
+mfull<-capscale(s_dmob~ Site + Al + B + Ca + Cu + Fe + K + Mg + Mn + P + Zn + Rainfall + pH, data=soil_env_data, sqrt.dist = F, add=F, comm=NULL, na.action=na.fail)
+mfull
+
+
+
+#Full Without Site
+mfullish<-capscale(s_dmob~ Al + B + Ca + Cu + Fe + K + Mg + Mn + P + Zn + Rainfall + pH, data=soil_env_data, sqrt.dist = F, add=F, comm=NULL, na.action=na.fail)
+mfullish
+
+
+
+
+#null model
+m0<-capscale(s_dmob~1,data=soil_env_data)
+m0
+
+#forward selection
+m2a<-ordistep(m0,scope=formula(mfull),direction="forward",Pin=.1,trace=T,pstep=1000000)#
+m2a
+
+#forward selection
+m2aish<-ordistep(m0,scope=formula(mfullish),direction="forward",Pin=.1,trace=T,pstep=1000000)#
+m2aish
+
+anova(m2a, by="margin")
+#> anova(m2a, by="margin")
+#Permutation test for capscale under reduced model
+#Marginal effects of terms
+#Permutation: free
+#Number of permutations: 999
+#
+#Model: capscale(formula = s_dmob ~ Site + Al + Mg, data = soil_env_data)
+#Df SumOfSqs      F Pr(>F)    
+#Site      2  0.30810 1.9567  0.001 ***
+ # Al        1  0.17121 2.1747  0.001 ***
+  #Mg        1  0.14321 1.8190  0.011 *  
+  #Residual  7  0.55110 
+
+plot(m2a)
+plot(m2a,scaling=3,cex=3)
+#This is saved as a final model, most sign Site, Mg, Al .
+#######################################################################
+#Now, to do the plant-soil-env_data dbrda analysis
+
+##Insert the plant root unifrac matrix.
+nov_field_root_dm_renum <-read.table("/Users/kimberlymighell/Dropbox/JCALL_Nov16/dbrda/field_roots_unweighted_unifrac_dm_reorder.txt")
+nov_field_root_dm_renum <-(nov_field_root_dm_renum)
+nov_field_root_dm_renum
+rownames(nov_field_root_dm_renum)=colnames(nov_field_root_dm_renum)
+nov_field_root_dm_renum_do<-as.dist(nov_field_root_dm_renum)
+nov_field_root_dm_renum_do
+
+#Leaves
+nov_field_leaves_dm_renum<-read.table("/Users/kimberlymighell/Dropbox/JCALL_Nov16/dbrda/field_leaves_unw_unifrac_dm.txt")
+nov_field_leaves_dm_renum <-(nov_field_leaves_dm_renum)
+nov_field_leaves_dm_renum
+rownames(nov_field_leaves_dm_renum)=colnames(nov_field_leaves_dm_renum)
+nov_field_leaves_dm_renum_do<-as.dist(nov_field_leaves_dm_renum)
+nov_field_leaves_dm_renum_do
+
+
+
+
+s_dm <-read.table("/Users/kimberlymighell/Dropbox/JCALL_Nov16/soil_unw_unifrac_dm.txt")
+rownames(s_dm)=colnames(s_dm)
+s_dmob<-as.dist(s_dm,diag=T)
+s_dmob
+
+#Import soil env data and PC data for roots
+soil_env_pc_num_fieldroots_renum
+
+#Import soil env data with PC for leaves
+soil_env_pc_num_fieldleaves
+
+################################################################
+Roots
+
+#dbrda with all env and pc
+#FullModel
+#generate one model with EVERYTHING, environmental data, and soils PC data, to explain the unifrac dm matrix
+dbRDA_all_fieldroot<-capscale(nov_field_root_dm_renum_do ~ Site + Al + B + Ca + Cu + Fe + K + Mg + Mn + P + Zn + Rainfall + pH + PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + PC11, data=soil_env_pc_num_fieldroots_renum)
+dbRDA_all_fieldroot
+plot(dbRDA_all_fieldroot)
+
+
+#Null Model
+#generate one model with NOTHING to explain the unifrac dm matrix
+dbRDAnull_fieldroot<-capscale(nov_field_root_dm_renum_do~1,data=soil_env_pc_num_fieldroots_renum)
+dbRDAnull_fieldroot
+
+#use forward selection to choose which elements of the full model explain a significant amount of variaiton in the unifrac dm by comparing it to the null
+dbRDA_forsel<-ordistep(dbRDAnull_fieldroot,scope=formula(dbRDA_all_fieldroot),direction="forward",Pin=.1,trace=T,pstep=1000000)
+dbRDA_forsel
+
+dbRDA_forsel_soilonly<-ordistep(dbRDAnull_fieldroot,scope=formula(dbRDA_all_fieldroot_soil),direction="forward",Pin=.1,trace=T,pstep=1000000)
+dbRDA_forsel_soilonly
+
+anova(dbRDA_forsel_soilonly, by="margin")
+anova(dbRDA_forsel_soilonly)
+
+#note: this model selected :K + P + Rainfall  + Mg  + Ca + Al + PC9 + PC8+ PC11+ PC10 as explaining significant amount of variation
+plot(dbRDA_forsel)
+anova(dbRDA_forsel, by="margin")
+#This ANOVA showed the significance per variable
+
+
+#Conditioning for the PCs
+#IF we only look at soil PCs first, how much variation of the forward selected model is explained by the soil
+dbRDA_PCcons<-capscale(nov_field_root_dm_renum_do ~  K + P + Rainfall  + Mg  + Ca + Al + Condition(PC9 + PC8+ PC11+ PC10), data = soil_env_pc_num_fieldroots_renum)
+dbRDA_PCcons
+anova(dbRDA_PCcons)
+anova(dbRDA_PCcons, by="margin")
+
+
+#Conditioning for the environmental variables
+#IF we only look at environment first, how much variation of the forward selected model is explained by the environment
+dbRDA_soilcons<-capscale(nov_field_root_dm_renum_do ~ PC9 + PC8+ PC11 + PC10 + Condition(K + P + Rainfall  + Mg  + Ca + Al), data = soil_env_pc_num_fieldroots_renum)
+dbRDA_soilcons
+anova(dbRDA_soilcons)
+anova(dbRDA_soilcons, by="margin")
+
+
+################################################################
+#Leaves
+
+#dbrda with all env and pc
+#FullModel
+dbRDA_all_fieldleaves<-capscale(nov_field_leaves_dm_renum_do ~ Site + Al + B + Ca + Cu + Fe + K + Mg + Mn + P + Zn + Rainfall + pH + PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + PC11, data=soil_env_pc_num_fieldleaves)
+dbRDA_all_fieldleaves
+plot(dbRDA_all_fieldleaves)
+
+#Null Model
+dbRDAnull_fieldleaves<-capscale(nov_field_leaves_dm_renum_do~1,data=soil_env_pc_num_fieldleaves)
+dbRDAnull_fieldleaves
+
+
+dbRDA_forsel_leaves<-ordistep(dbRDAnull_fieldleaves,scope=formula(dbRDA_all_fieldleaves),direction="forward",Pin=.1,trace=T,pstep=1000000)
+dbRDA_forsel_leaves
+plot(dbRDA_forsel_leaves)
+anova(dbRDA_forsel_leaves)
+anova(dbRDA_forsel_leaves, by="margin")
+
+###############################################
+

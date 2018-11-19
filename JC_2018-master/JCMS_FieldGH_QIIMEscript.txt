@@ -1,0 +1,608 @@
+
+#This is the master script for Kim Mighell’s Jatropha 16S Field and Greenhouse comparison paper
+
+#First, let’s combine the field (2015) and greenhouse (2014) soils which were both amplified with the 515 and 806 (soil) primers. That will allow us to see how similar the soils were across years, in the field and that we brought into the greenhouse, to make sure that our comparison and plants in field and greenhouse settings can be fixed back to soil origin
+
+validate_mapping_file.py -m MapSoil515.txt -o check_soils_map_output
+
+split_libraries_fastq.py -i S1_S42_L001_R1_001.fastq,S2_S43_L001_R1_001.fastq,S3_S44_L001_R1_001.fastq,S4_S45_L001_R1_001.fastq,S5_S46_L001_R1_001.fastq,S6_S47_L001_R1_001.fastq,S7_S48_L001_R1_001.fastq,S8_S49_L001_R1_001.fastq,S9_S50_L001_R1_001.fastq,S10_S51_L001_R1_001.fastq,S11_S52_L001_R1_001.fastq,S12_S53_L001_R1_001.fastq,S4GH_S1_L001_R1_001.fastq,S5GH_S2_L001_R1_001.fastq,S6GH_S3_L001_R1_001.fastq -o sl_out_515_GHField/ -b S1_S42_L001_I1_001.fastq,S2_S43_L001_I1_001.fastq,S3_S44_L001_I1_001.fastq,S4_S45_L001_I1_001.fastq,S5_S46_L001_I1_001.fastq,S6_S47_L001_I1_001.fastq,S7_S48_L001_I1_001.fastq,S8_S49_L001_I1_001.fastq,S9_S50_L001_I1_001.fastq,S10_S51_L001_I1_001.fastq,S11_S52_L001_I1_001.fastq,S12_S53_L001_I1_001.fastq,S4GH_S1_L001_I1_001.fastq,S5GH_S2_L001_I1_001.fastq,S6GH_S3_L001_I1_001.fastq -m MapSoil515.txt —-barcode_type 8
+
+#Take the seqs.fna output from the sl_out file, and pick open reference with that. I renamed the seqs file to keep track of things in the future.
+
+pick_open_reference_otus.py -i seqs515GHField.fna -o picked_open_ref_soilGHField515/ —-suppress_step4
+
+
+biom summarize_table -i picked_open_ref_soilGHField515/otu_table_mc2_w_tax_no_pynast_failures.biom
+
+#Success. Min 44641
+
+
+core_diversity_analyses.py -i picked_open_ref_soilGHField515/otu_table_mc2_w_tax_no_pynast_failures.biom -o core_divesity_soil515 -m MapSoil515.txt -c Experiment,Site,Plot -t picked_open_ref_soilGHField515/rep_set.tre -e 44641
+
+
+#The greenhouse soil samples are clustering with the unlimed field soil samples. Therefore, we can compare the field and greenhouse results. However, we should be careful to exclude the plants in the field that were in limed treatments, since that soil seems to separate out.
+
+
+
+###Now for the endophere primers. All DNA and cDNA from soil, roots, rhizosphere, and leaves amplified with the 799F 1115R Primers.
+
+#open macqiime
+macqiime
+
+# change working directory to file with map and fastq files
+cd /Users/vanbaellab/Documents/Kim/JCAll
+
+#check each mapping file for errors. Note: each mapping file was created with the set of samples receiving the same forward primer index (501-508) and separate reverse primers indices (701-710), resulting in eight mapping files of 9-10 samples in each.
+
+validate_mapping_file.py -m maps/map501.txt -o check_id_map501_output
+
+validate_mapping_file.py -m maps/map502.txt -o check_id_map502_output
+
+validate_mapping_file.py -m maps/map503.txt -o check_id_map503_output
+
+validate_mapping_file.py -m maps/map504.txt -o check_id_map504_output
+
+validate_mapping_file.py -m maps/map505.txt -o check_id_map505_output
+
+validate_mapping_file.py -m maps/map506.txt -o check_id_map506_output
+
+validate_mapping_file.py -m maps/map507.txt -o check_id_map507_output
+
+validate_mapping_file.py -m maps/map508.txt -o check_id_map508_output
+
+
+#now split the libraries of each sample contained within each mapping file
+
+split_libraries_fastq.py -i1-1_S1_L001_R1_001.fastq,9-1_S9_L001_R1_001.fastq,17-1_S17_L001_R1_001.fastq,25-1_S25_L001_R1_001.fastq,33-1_S33_L001_R1_001.fastq,41-1_S41_L001_R1_001.fastq,52-1_S49_L001_R1_001.fastq,61-1_S57_L001_R1_001.fastq,69-1_S65_L001_R1_001.fastq,78-1_S73_L001_R1_001.fastq -o sl_out_map501/ -b 1-1_S1_L001_I1_001.fastq,9-1_S9_L001_I1_001.fastq,17-1_S17_L001_I1_001.fastq,25-1_S25_L001_I1_001.fastq,33-1_S33_L001_I1_001.fastq,41-1_S41_L001_I1_001.fastq,52-1_S49_L001_I1_001.fastq,61-1_S57_L001_I1_001.fastq,69-1_S65_L001_I1_001.fastq,78-1_S73_L001_I1_001.fastq -m maps/map501.txt --barcode_type 8
+
+#check the log.txt file to ensure that each of your samples is present and split
+
+split_libraries_fastq.py -i2-1_S2_L001_R1_001.fastq,10-1_S10_L001_R1_001.fastq,18-1_S18_L001_R1_001.fastq,26-1_S26_L001_R1_001.fastq,34-1_S34_L001_R1_001.fastq,42-1_S42_L001_R1_001.fastq,53-1_S50_L001_R1_001.fastq,62-1_S58_L001_R1_001.fastq,70-1_S66_L001_R1_001.fastq,79-1_S74_L001_R1_001.fastq -o sl_out_map502/ -b 2-1_S2_L001_I1_001.fastq,10-1_S10_L001_I1_001.fastq,18-1_S18_L001_I1_001.fastq,26-1_S26_L001_I1_001.fastq,34-1_S34_L001_I1_001.fastq,42-1_S42_L001_I1_001.fastq,53-1_S50_L001_I1_001.fastq,62-1_S58_L001_I1_001.fastq,70-1_S66_L001_I1_001.fastq,79-1_S74_L001_I1_001.fastq -m maps/map502.txt --barcode_type 8
+
+split_libraries_fastq.py -i3-1_S3_L001_R1_001.fastq,11-1_S11_L001_R1_001.fastq,19-1_S19_L001_R1_001.fastq,27-1_S27_L001_R1_001.fastq,35-1_S35_L001_R1_001.fastq,43-1_S43_L001_R1_001.fastq,54-1_S51_L001_R1_001.fastq,63-1_S59_L001_R1_001.fastq,71-1_S67_L001_R1_001.fastq,80-1_S75_L001_R1_001.fastq -o sl_out_map503/ -b 3-1_S3_L001_I1_001.fastq,11-1_S11_L001_I1_001.fastq,19-1_S19_L001_I1_001.fastq,27-1_S27_L001_I1_001.fastq,35-1_S35_L001_I1_001.fastq,43-1_S43_L001_I1_001.fastq,54-1_S51_L001_I1_001.fastq,63-1_S59_L001_I1_001.fastq,71-1_S67_L001_I1_001.fastq,80-1_S75_L001_I1_001.fastq -m maps/map503.txt --barcode_type 8
+
+split_libraries_fastq.py -i4-1_S4_L001_R1_001.fastq,12-1_S12_L001_R1_001.fastq,20-1_S20_L001_R1_001.fastq,28-1_S28_L001_R1_001.fastq,36-1_S36_L001_R1_001.fastq,45-1_S44_L001_R1_001.fastq,55-1_S52_L001_R1_001.fastq,64-1_S60_L001_R1_001.fastq,73-1_S68_L001_R1_001.fastq -o sl_out_map504/ -b 4-1_S4_L001_I1_001.fastq,12-1_S12_L001_I1_001.fastq,20-1_S20_L001_I1_001.fastq,28-1_S28_L001_I1_001.fastq,36-1_S36_L001_I1_001.fastq,45-1_S44_L001_I1_001.fastq,55-1_S52_L001_I1_001.fastq,64-1_S60_L001_I1_001.fastq,73-1_S68_L001_I1_001.fastq -m maps/map504.txt --barcode_type 8
+
+split_libraries_fastq.py -i5-1_S5_L001_R1_001.fastq,13-1_S13_L001_R1_001.fastq,21-1_S21_L001_R1_001.fastq,29-1_S29_L001_R1_001.fastq,37-1_S37_L001_R1_001.fastq,47-1_S45_L001_R1_001.fastq,56-1_S53_L001_R1_001.fastq,65-1_S61_L001_R1_001.fastq,74-1_S69_L001_R1_001.fastq -o sl_out_map505/ -b 5-1_S5_L001_I1_001.fastq,13-1_S13_L001_I1_001.fastq,21-1_S21_L001_I1_001.fastq,29-1_S29_L001_I1_001.fastq,37-1_S37_L001_I1_001.fastq,47-1_S45_L001_I1_001.fastq,56-1_S53_L001_I1_001.fastq,65-1_S61_L001_I1_001.fastq,74-1_S69_L001_I1_001.fastq -m maps/map505.txt --barcode_type 8
+
+split_libraries_fastq.py -i6-1_S6_L001_R1_001.fastq,14-1_S14_L001_R1_001.fastq,22-1_S22_L001_R1_001.fastq,30-1_S30_L001_R1_001.fastq,38-1_S38_L001_R1_001.fastq,49-1_S46_L001_R1_001.fastq,57-1_S54_L001_R1_001.fastq,66-1_S62_L001_R1_001.fastq,75-1_S70_L001_R1_001.fastq -o sl_out_map506 -b 6-1_S6_L001_I1_001.fastq,14-1_S14_L001_I1_001.fastq,22-1_S22_L001_I1_001.fastq,30-1_S30_L001_I1_001.fastq,38-1_S38_L001_I1_001.fastq,49-1_S46_L001_I1_001.fastq,57-1_S54_L001_I1_001.fastq,66-1_S62_L001_I1_001.fastq,75-1_S70_L001_I1_001.fastq -m maps/map506.txt --barcode_type 8
+
+split_libraries_fastq.py -i7-1_S7_L001_R1_001.fastq,15-1_S15_L001_R1_001.fastq,23-1_S23_L001_R1_001.fastq,31-1_S31_L001_R1_001.fastq,39-1_S39_L001_R1_001.fastq,50-1_S47_L001_R1_001.fastq,59-1_S55_L001_R1_001.fastq,67-1_S63_L001_R1_001.fastq,76-1_S71_L001_R1_001.fastq -o sl_out_map507 -b 7-1_S7_L001_I1_001.fastq,15-1_S15_L001_I1_001.fastq,23-1_S23_L001_I1_001.fastq,31-1_S31_L001_I1_001.fastq,39-1_S39_L001_I1_001.fastq,50-1_S47_L001_I1_001.fastq,59-1_S55_L001_I1_001.fastq,67-1_S63_L001_I1_001.fastq,76-1_S71_L001_I1_001.fastq -m maps/map507.txt --barcode_type 8
+
+split_libraries_fastq.py -i8-1_S8_L001_R1_001.fastq,16-1_S16_L001_R1_001.fastq,24-1_S24_L001_R1_001.fastq,32-1_S32_L001_R1_001.fastq,40-1_S40_L001_R1_001.fastq,51-1_S48_L001_R1_001.fastq,60-1_S56_L001_R1_001.fastq,68-1_S64_L001_R1_001.fastq,77-1_S72_L001_R1_001.fastq -o sl_out_map508 -b 8-1_S8_L001_I1_001.fastq,16-1_S16_L001_I1_001.fastq,24-1_S24_L001_I1_001.fastq,32-1_S32_L001_I1_001.fastq,40-1_S40_L001_I1_001.fastq,51-1_S48_L001_I1_001.fastq,60-1_S56_L001_I1_001.fastq,68-1_S64_L001_I1_001.fastq,77-1_S72_L001_I1_001.fastq -m maps/map508.txt --barcode_type 8
+
+cat sl_out_map501/seqs.fna sl_out_map502/seqs.fna sl_out_map503/seqs.fna sl_out_map504/seqs.fna sl_out_map505/seqs.fna sl_out_map506/seqs.fna sl_out_map507/seqs.fna sl_out_map508/seqs.fna > greenhouse_plants.fna
+
+cat greenhouse_plants.fna field2015.fna > jcall.fna
+
+merge_mapping_files.py -m maps/map501.txt,maps/map502.txt,maps/map503.txt,maps/map504.txt,maps/map505.txt,maps/map506.txt,maps/map507.txt,maps/map508.txt -o merged_map_greenhouse.txt
+
+merge_mapping_files.py -m merged_map_greenhouse.txt,merged_map_2015field.txt -o merged_jcall.txt
+
+
+#let’s incorporate the Divisa plot 6 root DNA that we received in Nov (lab forgot to upload those sequences)
+
+#Split the libraries of the Divisa root DNA
+
+
+split_libraries_fastq.py -i124_S9_L001_R1_001.fastq,116_S1_L001_R1_001.fastq -o sl_out_plot5roots_508 -b 124_S9_L001_I1_001.fastq,116_S1_L001_I1_001.fastq -m map_plot5roots_508.txt —-barcode_type 8
+
+
+split_libraries_fastq.py -i117_S2_L001_R1_001.fastq,125_S10_L001_R1_001.fastq -o sl_out_plot5roots_501 -b 117_S2_L001_I1_001.fastq,125_S10_L001_I1_001.fastq -m map_plot5roots_501.txt —-barcode_type 8
+
+split_libraries_fastq.py -i118_S3_L001_R1_001.fastq,126_S11_L001_R1_001.fastq -o sl_out_plot5roots_502 -b 118_S3_L001_I1_001.fastq,126_S11_L001_I1_001.fastq -m map_plot5roots_502.txt —-barcode_type 8
+
+split_libraries_fastq.py -i119_S4_L001_R1_001.fastq -o sl_out_plot5roots_503 -b 119_S4_L001_I1_001.fastq -m map_plot5roots_503.txt —-barcode_type 8
+
+split_libraries_fastq.py -i120_S5_L001_R1_001.fastq -o sl_out_plot5roots_504 -b 120_S5_L001_I1_001.fastq -m map_plot5roots_504.txt —-barcode_type 8
+
+
+split_libraries_fastq.py -i121_S6_L001_R1_001.fastq -o sl_out_plot5roots_505 -b 121_S6_L001_I1_001.fastq -m map_plot5roots_505.txt —-barcode_type 8
+
+split_libraries_fastq.py -i122_S7_L001_R1_001.fastq -o sl_out_plot5roots_506 -b 122_S7_L001_I1_001.fastq -m map_plot5roots_506.txt —-barcode_type 8
+
+
+split_libraries_fastq.py -i123_S8_L001_R1_001.fastq -o sl_out_plot5roots_507 -b 123_S8_L001_I1_001.fastq -m map_plot5roots_507.txt —-barcode_type 8
+
+
+#Ok, now we’ve successfully split the libraries. Let’s cat the files into a plot5root.fna file, and then cat that with jcall.fna
+
+cat sl_out_plot5roots_501/seqs.fna sl_out_plot5roots_502/seqs.fna sl_out_plot5roots_503/seqs.fna sl_out_plot5roots_504/seqs.fna sl_out_plot5roots_505/seqs.fna sl_out_plot5roots_506/seqs.fna sl_out_plot5roots_507/seqs.fna sl_out_plot5roots_508/seqs.fna > plot5roots.fna
+
+cat jcall.fna plot5roots.fna > jcall_final.fnapick_open_reference_otus.py -i jcall_final.fna -o picked_open_ref_jcall_final_sup4/ -a —-suppress_step4
+
+biom summarize_table -i picked_open_ref_jcall_final_sup4/otu_table_mc2_w_tax_no_pynast_failures.biom
+
+
+#Filter out the failed samples
+filter_samples_from_otu_table.py -i picked_open_ref_jcall_final_sup4/otu_table_mc2_w_tax_no_pynast_failures.biom -o otu_table_9555.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_9555.txt
+
+#285 samples, 24341 OTUs, 16858962 total seqs, 9555-192508 seqs/sample
+
+#How does this change without mitochondria?
+
+filter_taxa_from_otu_table.py -i otu_table_9555.biom -o otu_table_9555_no_mito.biom -n f__mitochondria
+
+biom summarize_table -i otu_table_9555_no_mito.biom
+#Num samples: 285
+Num observations: 24064
+Total count: 13977179
+Table density (fraction of non-zero values): 0.069
+
+Counts/sample summary:
+ Min: 1977.0
+ Max: 192333.0
+ Median: 40160.000
+ Mean: 49042.733
+
+#So, after filtering for mitochondria, in 285 samples, we have a total of 13.98 million sequences, clustered into 24064 OTUs.
+
+#To Remove:
+ 1.1: 1977.0
+ 35: 3935.0
+ 31: 4534.0
+ 29: 4967.0
+ 30: 6101.0
+ 39: 6429.0
+
+filter_samples_from_otu_table.py -i otu_table_9555_no_mito.biom -o otu_table_7385_nomito.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_7385_nomito.txt
+
+
+#Now let’s filter out the chloroplasts:
+
+filter_taxa_from_otu_table.py -i otu_table_7385_nomito.biom -o otu_table_7067_no_mito_nochloro.biom -n c__Chloroplast
+
+biom summarize_table -i otu_table_7067_no_mito_nochloro.biom
+
+#Results
+Num samples: 279
+Num observations: 23998
+Total count: 13907749
+Table density (fraction of non-zero values): 0.070
+
+Counts/sample summary:
+ Min: 7067.0
+ Max: 192332.0
+ Median: 40722.000
+ Mean: 49848.563
+ Std. dev.: 34310.273
+
+# overall analysis
+core_diversity_analyses.py -i otu_table_7067_no_mito_nochloro.biom -o core_diversity_analyses_all_nomito_nochloro -m merged_jcall_final.txt -c Description,Site,Sterility -t rep_set.tre -e 7067
+
+#Just live samples
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o otu_table_7067_no_mito_nochloro_all_live.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_all_live.txt
+
+alpha_diversity.py -i otu_table_7067_no_mito_nochloro_all_live.biom -o all_live_alpha.txt -t rep_set.tre
+
+beta_diversity.py -i otu_table_7067_no_mito_nochloro_all_live.biom -m unweighted_unifrac -o beta_div_all_live/ -t rep_set.tre
+
+compare_categories.py --method adonis -i beta_div_all_live/unweighted_unifrac_otu_table_7067_no_mito_nochloro_all_live.txt -m merged_jcall_final.txt -c Description -o beta_div_all_live/adonis_Description -n 999
+
+#                                 Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+#qiime.data$map[[opts$category]]   2    11.324  5.6620  24.119 0.23735  0.001
+#Residuals                       155    36.386  0.2348         0.76265       
+#Total                           157    47.710                 1.00000
+
+#############################################################################
+#Greenhouse: Live and Sterile: roots and leaves#
+
+#all
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o GH/all/otu_table_GH_all_no_mito_nochloro.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_GHonly.txt
+
+biom summarize_table -i GH/all/otu_table_GH_all_no_mito_nochloro.biom
+#Min 10731
+
+core_diversity_analyses.py -i GH/all/otu_table_GH_all_no_mito_nochloro.biom -o GH/all/core_diversity_analyses_nomito_nochloro  -m merged_jcall_final.txt -c Description,Sterility,Site -t rep_set.tre -e 10731
+
+
+#all leaves
+filter_samples_from_otu_table.py -i  otu_table_7067_no_mito_nochloro.biom -o GH/all/leaves/otu_table_GH_all_leaves_nomito_nochloro.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_GH_only_leaves.txt
+
+biom summarize_table -i GH/all/leaves/otu_table_GH_all_leaves_nomito_nochloro.biom
+#min 14505
+
+core_diversity_analyses.py -i GH/all/leaves/otu_table_GH_all_leaves_nomito_nochloro.biom -o GH/all/leaves/core_diversity_analyses_nomito_nochloro  -m merged_jcall_final.txt -c Site,Sterility -t rep_set.tre -e 14505
+
+
+compare_categories.py --method adonis -i GH/all/leaves/core_diversity_analyses_nomito_nochloro/bdiv_even14505/unweighted_unifrac_dm.txt -m merged_jcall_final.txt -c Sterility -o GH/all/leaves/core_diversity_analyses_nomito_nochloro/adonis_UnW_Sterility -n 999
+
+#                                Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)   
+#qiime.data$map[[opts$category]]  1    0.4238 0.42381  2.1907 0.06407  0.007 **
+#Residuals                       32    6.1906 0.19346         0.93593          
+#Total                           33    6.6144                 1.00000
+
+
+#Chao1
+#Group1	Group2	Group1 mean	Group1 std	Group2 mean	Group2 std	t stat	p-value
+#Live	Sterile	884.369265032	194.655266837	648.667801133	141.830420942	3.91456749905	0.001
+
+#OTUs
+#Group1	Group2	Group1 mean	Group1 std	Group2 mean	Group2 std	t stat	p-value
+#Live	Sterile	580.735294118	143.550286091	416.905882353	97.2929987844	3.77890771347	0.001
+
+
+
+#all roots
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o GH/all/roots/otu_table_GH_all_roots_nomito_nochloro.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_GH_only_roots.txt
+
+biom summarize_table -i GH/all/roots/otu_table_GH_all_roots_nomito_nochloro.biom
+#min 23688
+
+core_diversity_analyses.py -i GH/all/roots/otu_table_GH_all_roots_nomito_nochloro.biom -o GH/all/roots/core_diversity_analyses_nomito_nochloro  -m merged_jcall_final.txt -c Site,Sterility -t rep_set.tre -e 23688
+
+compare_categories.py --method adonis -i GH/all/roots/core_diversity_analyses_nomito_nochloro/bdiv_even23688/unweighted_unifrac_dm.txt -m merged_jcall_final.txt -c Sterility -o GH/all/roots/core_diversity_analyses_nomito_nochloro/adonis_UnW_Sterility -n 999
+
+
+#                                Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
+#qiime.data$map[[opts$category]]  1    0.8229  0.8229  7.6906 0.20404  0.001 ***
+#Residuals                       30    3.2100  0.1070         0.79596           
+#Total                           31    4.0329                 1.00000   
+
+
+
+
+#Compare alpha diversity by Sterility
+#Chao1
+#Group1	Group2	Group1 mean	Group1 std	Group2 mean	Group2 std	t stat	p-value
+#Live	Sterile	1375.14158966	246.082954618	871.730438788	93.3778663329	7.71935083669	0.001
+
+#OTUs
+#Group1	Group2	Group1 mean	Group1 std	Group2 mean	Group2 std	t stat	p-value
+#Live	Sterile	979.885714286	180.041339924	633.311111111	64.6396841378	7.32398747748	0.001
+
+#############################################################################
+#Field: leaves, roots and soil DNA
+
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o field_endosymbionts_soil/otu_table_field_endosymbiots_soil_nomito_nochloro.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_field_endosymbionts_soil.txt
+
+biom summarize_table -i field_endosymbionts_soil/otu_table_field_endosymbiots_soil_nomito_nochloro.biom
+#Min 7067
+
+core_diversity_analyses.py -i field_endosymbionts_soil/otu_table_field_endosymbiots_soil_nomito_nochloro.biom -o field_endosymbionts_soil/core_diversity_analyses_nomito_nochloro -m merged_jcall_final.txt -c Description,Site -t rep_set.tre -e 7067
+
+compare_categories.py --method adonis -i field_endosymbionts_soil/core_diversity_analyses_nomito_nochloro/bdiv_even7067/unweighted_unifrac_dm.txt -m merged_jcall_final.txt -c Description -o field_endosymbionts_soil/core_diversity_analyses_nomito_nochloro/adonis_UnW_Description -n 999
+
+#                                 Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+#qiime.data$map[[opts$category]]   2    10.606  5.3029  23.955 0.27549  0.001
+#Residuals                       126    27.892  0.2214         0.72451       
+#Total                           128    38.498                 1.00000  
+
+
+#Soil
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o field_endosymbionts_soil/soil/otu_table_field_soil_nomito_nochloro.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_field_soil_799.txt
+
+biom summarize_table -i field_endosymbionts_soil/soil/otu_table_field_soil_nomito_nochloro.biom
+#min 27212
+
+core_diversity_analyses.py -i field_endosymbionts_soil/soil/otu_table_field_soil_nomito_nochloro.biom -o field_endosymbionts_soil/soil/core_diversity_analyses_nomito_nochloro -m merged_jcall_final.txt -c Site -t rep_set.tre -e 27212
+
+compare_categories.py --method adonis -i field_endosymbionts_soil/soil/core_diversity_analyses_nomito_nochloro/bdiv_even27212/unweighted_unifrac_dm.txt -m merged_jcall_final.txt -c Site -o field_endosymbionts_soil/soil/core_diversity_analyses_nomito_nochloro/adonis_UnW_Site -n 999
+#                                Df SumsOfSqs  MeanSqs F.Model      R2 Pr(>F)
+#qiime.data$map[[opts$category]]  2   0.42786 0.213932  2.2226 0.33061  0.001
+#Residuals                        9   0.86630 0.096255         0.66939       
+#Total                           11   1.29416                  1.00000  
+
+
+alpha_diversity.py -i field_endosymbionts_soil/soil/otu_table_field_soil_nomito_nochloro.biom -o field_endosymbionts_soil/soil/core_diversity_analyses_nomito_nochloro/soil_alpha.txt -t rep_set.tre
+
+
+
+
+
+
+
+
+#Field: Leaves
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o field_endosymbionts_soil/leaves/otu_table_field_leaves_nomito_nochloro.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_field_leaves.txt
+
+biom summarize_table -i field_endosymbionts_soil/leaves/otu_table_field_leaves_nomito_nochloro.biom
+#min 7067
+
+core_diversity_analyses.py -i field_endosymbionts_soil/leaves/otu_table_field_leaves_nomito_nochloro.biom -o field_endosymbionts_soil/leaves/core_diversity_analyses_nomito_nochloro -m merged_jcall_final.txt -c Site,Plot -t rep_set.tre -e 7067
+
+compare_categories.py --method adonis -i field_endosymbionts_soil/leaves/core_diversity_analyses_nomito_nochloro/bdiv_even7067/unweighted_unifrac_dm.txt -m merged_jcall_final.txt -c Site -o field_endosymbionts_soil/leaves/core_diversity_analyses_nomito_nochloro/adonis_UnW_Site -n 999
+
+#                                Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
+#qiime.data$map[[opts$category]]  2    1.0058 0.50292  2.4742 0.09172  0.001 ***
+#Residuals                       49    9.9600 0.20327         0.90828           
+#Total                           51   10.9659                 1.00000  
+
+
+
+group_significance.py -i field_endosymbionts_soil/leaves/core_diversity_analyses_nomito_nochloro/taxa_plots/table_mc7067_sorted_L2.txt -o field_endosymbionts_soil/leaves/core_diversity_analyses_nomito_nochloro/group_significance/L2.txt -m merged_jcall_final.txt -c Site
+
+group_significance.py -i field_endosymbionts_soil/leaves/core_diversity_analyses_nomito_nochloro/taxa_plots/table_mc7067_sorted_L2.txt -o field_endosymbionts_soil/leaves/core_diversity_analyses_nomito_nochloro/group_significance/L2_Treatment.txt -m merged_jcall_final.txt -c Treatment
+
+#Field: Roots
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o field_endosymbionts_soil/roots/otu_table_field_roots_nomito_nochloro.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_field_roots.txt
+
+biom summarize_table -i field_endosymbionts_soil/roots/otu_table_field_roots_nomito_nochloro.biom
+#min 9522
+
+core_diversity_analyses.py -i field_endosymbionts_soil/roots/otu_table_field_roots_nomito_nochloro.biom -o field_endosymbionts_soil/roots/core_diversity_analyses_nomito_nochloro -m merged_jcall_final.txt -c Site,Plot -t rep_set.tre -e 9522
+
+compare_categories.py --method adonis -i field_endosymbionts_soil/roots/core_diversity_analyses_nomito_nochloro/bdiv_even9522/unweighted_unifrac_dm.txt -m merged_jcall_final.txt -c Site -o field_endosymbionts_soil/roots/core_diversity_analyses_nomito_nochloro/adonis_UnW_Site -n 999
+#                                Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
+#qiime.data$map[[opts$category]]  2    2.6207 1.31037    6.79 0.18456  0.001 ***
+#Residuals                       60   11.5791 0.19298         0.81544           
+#Total                           62   14.1998                 1.00000  
+
+
+group_significance.py -i field_endosymbionts_soil/roots/core_diversity_analyses_nomito_nochloro/taxa_plots/table_mc9522_sorted_L2.txt -o field_endosymbionts_soil/roots/core_diversity_analyses_nomito_nochloro/group_significance/L2.txt -m merged_jcall_final.txt -c Site
+
+
+
+############################################################################# 
+#Greenhouse: Live roots and leaves
+#Live leaves
+
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o GH/all/leaves/live/otu_table_GH_all_leaves_nomito_nochloro.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_GH_leaves_live.txt
+
+biom summarize_table -i GH/all/leaves/live/otu_table_GH_all_leaves_nomito_nochloro.biom
+#min 17636
+
+core_diversity_analyses.py -i GH/all/leaves/live/otu_table_GH_all_leaves_nomito_nochloro.biom -o GH/all/leaves/live/core_divesity_analyses_nomito_nochloro  -m merged_jcall_final.txt -c Site -t rep_set.tre -e 17636
+
+compare_categories.py --method adonis -i GH/all/leaves/live/core_divesity_analyses_nomito_nochloro/bdiv_even17636/unweighted_unifrac_dm.txt -m merged_jcall_final.txt -c Site -o GH/all/leaves/live/core_divesity_analyses_nomito_nochloro/adonis_UnW_Site -n 999
+
+group_significance.py -i GH/all/leaves/live/core_divesity_analyses_nomito_nochloro/taxa_plots/table_mc17636_sorted_L2.txt -o GH/all/leaves/live/core_divesity_analyses_nomito_nochloro/group_significance/L2.txt -m merged_jcall_final.txt -c Site
+
+#Live Roots
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o GH/all/roots/live/otu_table_GH_all_roots_nomito_nochloro.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_GH_roots_live.txt
+
+biom summarize_table -i GH/all/roots/live/otu_table_GH_all_roots_nomito_nochloro.biom
+#min 23688
+ 
+core_diversity_analyses.py -i GH/all/roots/live/otu_table_GH_all_roots_nomito_nochloro.biom -o GH/all/roots/live/core_divesity_analyses_nomito_nochloro  -m merged_jcall_final.txt -c Site -t rep_set.tre -e 23688
+
+compare_categories.py --method adonis -i GH/all/roots/live/core_divesity_analyses_nomito_nochloro/bdiv_even23688/unweighted_unifrac_dm.txt -m merged_jcall_final.txt -c Site -o GH/all/roots/live/core_divesity_analyses_nomito_nochloro/adonis_UnW_Site -n 999
+
+group_significance.py -i GH/all/roots/live/core_divesity_analyses_nomito_nochloro/taxa_plots/table_mc23688_sorted_L2.txt -o GH/all/roots/live/core_divesity_analyses_nomito_nochloro/group_significance/L2.txt -m merged_jcall_final.txt -c Site
+
+#############################################################################
+#Field roots and leaves and greenhouse live roots and leaves. This only uses plants in non-limed soil in the field.
+
+
+#Both
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o Exp_design/GHFieldComp/otu_table_GHF_RL_nomito_nochloro.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_GHF_comp_all.txt
+
+
+biom summarize_table -i Exp_design/GHFieldComp/otu_table_GHF_RL_nomito_nochloro.biom
+#min7866
+
+beta_diversity.py -i Exp_design/GHFieldComp/otu_table_GHF_RL_nomito_nochloro.biom -m unweighted_unifrac -o Exp_design/GHFieldComp/beta_diversity/ -t rep_set.tre
+
+
+#Roots
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o Roots/GHFieldComp/otu_table_roots_comp_nomito_nochloro.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_roots_fieldGHComp.txt
+
+biom summarize_table -i Roots/GHFieldComp/otu_table_roots_comp_nomito_nochloro.biom
+#min 11124
+
+core_diversity_analyses.py -i Roots/GHFieldComp/otu_table_roots_comp_nomito_nochloro.biom -o Roots/GHFieldComp/core_diversity_analyses_nomito_nochloro  -m merged_jcall_final.txt -c ExpType -t rep_set.tre -e 11124
+
+group_significance.py -i Roots/GHFieldComp/core_diversity_analyses_nomito_nochloro/taxa_plots/table_mc11124_sorted_L2.txt -o Roots/GHFieldComp/core_diversity_analyses_nomito_nochloro/group_analyses/L2.txt -m merged_jcall_final.txt -c ExpType
+
+compare_categories.py --method adonis -i Roots/GHFieldComp/core_diversity_analyses_nomito_nochloro/bdiv_even11124/unweighted_unifrac_dm.txt -m merged_jcall_final.txt -c ExpType -o Roots/GHFieldComp/core_diversity_analyses_nomito_nochloro/adonis_UnW_Site -n 999
+
+alpha_diversity.py -i Roots/GHFieldComp/otu_table_roots_comp_nomito_nochloro.biom -o Roots/GHFieldComp/alpha_diversity_analyses_nomito_nochloro -t rep_set.tre
+
+#Leaves
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o Leaves/GHFieldComp/otu_table_leaves_comp_nomito_nochloro.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_leaves_GHFieldComp.txt
+
+biom summarize_table -i Leaves/GHFieldComp/otu_table_leaves_comp_nomito_nochloro.biom
+#7866
+
+core_diversity_analyses.py -i Leaves/GHFieldComp/otu_table_leaves_comp_nomito_nochloro.biom -o Leaves/GHFieldComp/core_divesity_analyses_nomito_nochloro  -m merged_jcall_final.txt -c ExpType -t rep_set.tre -e 7866
+
+alpha_diversity.py -i Leaves/GHFieldComp/otu_table_leaves_comp_nomito_nochloro.biom -o Leaves/GHFieldComp/alpha_divesity_analyses_nomito_nochloro -t rep_set.tre
+
+compare_categories.py --method adonis -i Leaves/GHFieldComp/core_diversity_analyses_nomito_nochloro/bdiv_even7866/unweighted_unifrac_dm.txt -m merged_jcall_final.txt -c ExpType -o Leaves/GHFieldComp/core_diversity_analyses_nomito_nochloro/adonis_UnW_Site -n 999
+
+#                                Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
+#qiime.data$map[[opts$category]]  1    1.9712 1.97124  9.2293 0.19541  0.001 ***
+#Residuals                       38    8.1162 0.21359         0.80459           
+#Total                           39   10.0875                 1.00000           
+---
+
+
+##############Lime treatment#######################
+#Filter out by plot, roots and leaves
+#plot 1
+#roots
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o LimeEffect/Plot1/p1roots.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_p1_roots.txt
+
+biom summarize_table -i LimeEffect/Plot1/p1roots.biom
+#min 9522
+
+beta_diversity.py -i LimeEffect/Plot1/p1roots.biom -m unweighted_unifrac -o LimeEffect/Plot1/beta_div_roots/ -t rep_set.tre
+
+compare_categories.py --method adonis -i LimeEffect/Plot1/beta_div_roots/unweighted_unifrac_p1roots.txt -m merged_jcall_final.txt -c Treatment -o LimeEffect/Plot1/beta_div_roots/adonis_UnW_Treatment -n 999
+
+
+                                Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)  
+qiime.data$map[[opts$category]]  1   0.26707 0.26707  1.4718 0.22742  0.039 *
+Residuals                        5   0.90730 0.18146         0.77258         
+Total                            6   1.17437                 1.00000 
+
+#leaves
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o LimeEffect/Plot1/p1leaves.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_p1_leaves.txt
+
+biom summarize_table -i LimeEffect/Plot1/p1leaves.biom
+#min 13418
+
+beta_diversity.py -i LimeEffect/Plot1/p1leaves.biom -m unweighted_unifrac -o LimeEffect/Plot1/beta_div_leaves/ -t rep_set.tre
+
+compare_categories.py --method adonis -i LimeEffect/Plot1/beta_div_leaves/unweighted_unifrac_p1leaves.txt -m merged_jcall_final.txt -c Treatment -o LimeEffect/Plot1/beta_div_leaves/adonis_UnW_Treatment -n 999
+#too few to test
+
+#plot 2
+#roots
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o LimeEffect/Plot2/p2roots.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_p2_roots.txt
+
+biom summarize_table -i LimeEffect/Plot2/p2roots.biom
+#min 21521
+
+beta_diversity.py -i LimeEffect/Plot2/p2roots.biom -m unweighted_unifrac -o LimeEffect/Plot2/beta_div_roots/ -t rep_set.tre
+
+compare_categories.py --method adonis -i LimeEffect/Plot2/beta_div_root/unweighted_unifrac_p2roots.txt -m merged_jcall_final.txt -c Treatment -o LimeEffect/Plot2/beta_div_root/adonis_UnW_Treatment -n 999
+
+#Results
+                                Df SumsOfSqs MeanSqs F.Model     R2 Pr(>F)   
+qiime.data$map[[opts$category]]  1    0.3408 0.34080   2.173 0.2136  0.008 **
+Residuals                        8    1.2547 0.15684         0.7864          
+Total                            9    1.5955                 1.0000  
+
+
+
+#leaves
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o LimeEffect/Plot2/p2leaves.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_p2_leaves.txt
+
+biom summarize_table -i LimeEffect/Plot2/p2leaves.biom
+#min 7866
+
+compare_categories.py --method adonis -i LimeEffect/Plot2/core_diversity_analyses_leaves/bdiv_even7875/unweighted_unifrac_dm.txt -m merged_jcall_final.txt -c Treatment -o LimeEffect/Plot2/core_diversity_analyses_leaves/adonis_UnW_Treatment -n 999
+#Not Significant
+
+beta_diversity.py -i LimeEffect/Plot2/p2leaves.biom -m unweighted_unifrac -o LimeEffect/Plot2/beta_div_leaves/ -t rep_set.tre
+
+compare_categories.py --method adonis -i LimeEffect/Plot2/beta_div_leaves/unweighted_unifrac_p2leaves.txt -m merged_jcall_final.txt -c Treatment -o LimeEffect/Plot2/beta_div_leaves/adonis_UnW_Treatment -n 999
+#NS
+
+
+#plot 3
+#roots
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o LimeEffect/Plot3/p3roots.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_p3_roots.txt
+
+biom summarize_table -i LimeEffect/Plot3/p3roots.biom
+#min 11124
+
+beta_diversity.py -i LimeEffect/Plot3/p3roots.biom -m unweighted_unifrac -o LimeEffect/Plot3/beta_div_roots/ -t rep_set.tre
+
+compare_categories.py --method adonis -i LimeEffect/Plot3/beta_div_roots/unweighted_unifrac_p3roots.txt -m merged_jcall_final.txt -c Treatment -o LimeEffect/Plot3/beta_div_roots/adonis_UnW_Treatment -n 999
+#NS
+
+#leaves
+
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o LimeEffect/Plot3/p3leaves.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_p3_leaves.txt
+
+biom summarize_table -i LimeEffect/Plot3/p3leaves.biom
+#min 7924
+
+beta_diversity.py -i LimeEffect/Plot3/p3leaves.biom -m unweighted_unifrac -o LimeEffect/Plot3/beta_div_leaves/ -t rep_set.tre
+
+compare_categories.py --method adonis -i LimeEffect/Plot3/beta_div_leaves/unweighted_unifrac_p3leaves.txt -m merged_jcall_final.txt -c Treatment -o LimeEffect/Plot3/beta_div_leaves/adonis_UnW_Treatment -n 999
+
+                                Df SumsOfSqs MeanSqs F.Model    R2 Pr(>F)   
+qiime.data$map[[opts$category]]  1   0.25605 0.25605  1.2974 0.126  0.007 **
+Residuals                        9   1.77618 0.19735         0.874          
+Total                           10   2.03223                 1.000          
+---
+
+
+#plot 4
+#roots
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o LimeEffect/Plot4/p4roots.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_p4_roots.txt
+
+biom summarize_table -i LimeEffect/Plot4/p4roots.biom
+#min 10941
+
+beta_diversity.py -i LimeEffect/Plot4/p4roots.biom -m unweighted_unifrac -o LimeEffect/Plot4/beta_div_roots/ -t rep_set.tre
+
+compare_categories.py --method adonis -i LimeEffect/Plot4/beta_div_roots/unweighted_unifrac_p4roots.txt -m merged_jcall_final.txt -c Treatment -o LimeEffect/Plot4/beta_div_roots/adonis_UnW_Treatment -n 999
+
+#Results
+Terms added sequentially (first to last)
+
+                                Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)   
+qiime.data$map[[opts$category]]  1   0.27252 0.27253  1.7617 0.14979  0.005 **
+Residuals                       10   1.54691 0.15469         0.85021          
+Total                           11   1.81943                 1.00000  
+
+
+#leaves
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o LimeEffect/Plot4/p4leaves.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_p4_leaves.txt
+
+biom summarize_table -i LimeEffect/Plot4/p4leaves.biom
+#min  7067
+
+beta_diversity.py -i LimeEffect/Plot4/p4leaves.biom -m unweighted_unifrac -o LimeEffect/Plot4/beta_div_leaves/ -t rep_set.tre
+
+compare_categories.py --method adonis -i LimeEffect/Plot4/beta_div_leaves/unweighted_unifrac_p4leaves.txt -m merged_jcall_final.txt -c Treatment -o LimeEffect/Plot4/beta_div_leaves/adonis_UnW_Treatment -n 999
+#NS
+
+
+#plot 5
+#roots
+
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o LimeEffect/Plot5/p5roots.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_p5_roots.txt
+
+biom summarize_table -i LimeEffect/Plot5/p5roots.biom
+#min 13546
+
+beta_diversity.py -i LimeEffect/Plot5/p5roots.biom -m unweighted_unifrac -o LimeEffect/Plot5/beta_div_roots/ -t rep_set.tre
+
+compare_categories.py --method adonis -i LimeEffect/Plot5/beta_div_roots/unweighted_unifrac_p5roots.txt -m merged_jcall_final.txt -c Treatment -o LimeEffect/Plot5/beta_div_roots/adonis_UnW_Treatment -n 9999
+
+#Results
+                                Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)  
+qiime.data$map[[opts$category]]  1   0.21248 0.21248  1.3114 0.12718 0.0534 .
+Residuals                        9   1.45821 0.16202         0.87282         
+Total                           10   1.67069                 1.00000   
+
+#So close! Dang.
+
+
+#leaves
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o LimeEffect/Plot5/p5leaves.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_p5_leaves.txt
+
+biom summarize_table -i LimeEffect/Plot5/p5leaves.biom
+#min  14977
+
+beta_diversity.py -i LimeEffect/Plot5/p5leaves.biom -m unweighted_unifrac -o LimeEffect/Plot5/beta_div_leaves/ -t rep_set.tre
+
+compare_categories.py --method adonis -i LimeEffect/Plot5/beta_div_leaves/unweighted_unifrac_p5leaves.txt -m merged_jcall_final.txt -c Treatment -o LimeEffect/Plot5/beta_div_leaves/adonis_UnW_Treatment -n 999
+#NS
+
+
+#plot 6
+#root
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o LimeEffect/Plot6/p6roots.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_p6_roots.txt
+
+biom summarize_table -i LimeEffect/Plot6/p6roots.biom
+#min 14877
+
+beta_diversity.py -i LimeEffect/Plot6/p6roots.biom -m unweighted_unifrac -o LimeEffect/Plot6/beta_div_roots/ -t rep_set.tre
+
+compare_categories.py --method adonis -i LimeEffect/Plot6/beta_div_roots/unweighted_unifrac_p6roots.txt -m merged_jcall_final.txt -c Treatment -o LimeEffect/Plot6/beta_div_roots/adonis_UnW_Treatment -n 999
+#NS
+
+
+#leaves
+filter_samples_from_otu_table.py -i otu_table_7067_no_mito_nochloro.biom -o LimeEffect/Plot6/p6leaves.biom -m merged_jcall_final.txt --sample_id_fp samples_to_keep_p6_leaves.txt
+
+biom summarize_table -i LimeEffect/Plot6/p6leaves.biom
+#min  14114
+
+beta_diversity.py -i LimeEffect/Plot6/p6leaves.biom -m unweighted_unifrac -o LimeEffect/Plot6/beta_div_leaves/ -t rep_set.tre
+
+compare_categories.py --method adonis -i LimeEffect/Plot6/beta_div_leaves/unweighted_unifrac_p6leaves.txt -m merged_jcall_final.txt -c Treatment -o LimeEffect/Plot6/beta_div_leaves/adonis_UnW_Treatment -n 999
+#NS
+
+
+#Alpha diversity?
+#Soil
+compare_alpha_diversity.py -i field_endosymbionts_soil/soil/core_diversity_analyses_nomito_nochloro/arare_max27212/alpha_div_collated/chao1.txt -m merged_jcall_final.txt -c Treatment -o LimeEffect/Soilalphachao1
+#NS
+
+#roots
+compare_alpha_diversity.py -i field_endosymbionts_soil/roots/core_diversity_analyses_nomito_nochloro/arare_max9522/alpha_div_collated/chao1.txt -m merged_jcall_final.txt -c Treatment -o LimeEffect/Rootsalphachao1
+#NS
+
+#leaves
+compare_alpha_diversity.py -i field_endosymbionts_soil/leaves/core_diversity_analyses_nomito_nochloro/arare_max7067/alpha_div_collated/chao1.txt -m merged_jcall_final.txt -c Treatment -o LimeEffect/Leavesalphachao1
+#NS
+
+
+
